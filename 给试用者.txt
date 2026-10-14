@@ -41,6 +41,6 @@ macOS / Linux 的完整跑法在 README §0 与 §3 里各有一份（Windows �
   · 它不调用模型，不做数据库 / 向量检索 / 图谱。
   · 它**不保证**宿主自动触发；"手动 resume 成功"不等于"自动恢复被证明"。
   · **macOS / Linux 目前没有实测过**（写这版时手上没有那两台机）；Windows 实测过。
-  · 许可 = MIT，署名＝**记性好的大肥鱼姐姐**（LICENSE 的版权行就是这个名字）。
-  · 将来要放的仓库名（建议）＝ memory-receipts；**目前还没上传**，所以现在只有这个 zip。
+  · 许可 = MIT，署名＝**记性好的大肥鱼姐姐 & 会收尾的Astra**（LICENSE 的版权行就是这两个名字）。
+  · 已发布：https://github.com/ANBYYYY/memory-receipts（public）。
   · 有问题不是你的问题 —— 多半是我们文档没写清，那正是我们要的信息。

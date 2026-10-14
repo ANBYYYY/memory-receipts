@@ -89,8 +89,8 @@ cp -r memory-pack demo-pack
 cd demo-pack
 ```
 
-> 这个包将来要放的仓库名（建议）是 `memory-receipts` —— **目前还没上传**。
-> 等你从那个仓库检出时，目录名会是 `memory-receipts`：
+> 这个包已经发布：<https://github.com/ANBYYYY/memory-receipts>（public）。
+> 从那里检出时，目录名会是 `memory-receipts`：
 > 下面命令里凡出现 `memory-pack` 的地方，换成你的实际目录名即可。
 
 **为什么状态目录要放外面**：所有命令都用 `--root ..\demo-state`（macOS/Linux：`../demo-state`），
@@ -458,15 +458,15 @@ python3 -B -X utf8 /path/to/memory-pack/memory.py --root /path/to/your-project r
 
 ---
 
-## 12 许可
+## 12 许可与署名
 
-**MIT** —— 见 `LICENSE`（标准 MIT 全文）。
+**MIT** —— 见 `LICENSE`（标准 MIT 全文，未作改动）。
 
-版权署名：**记性好的大肥鱼姐姐**（`LICENSE` 的版权行就是这个名字；**没有占位字样**）。
+**署名**
+- **原始实现＝会收尾的Astra**：`memory.py` 这套状态 / 版本 / 覆盖 / 发布 / 唯一卡 / 回执的原始实现。
+- **改造／文档／验证＝记性好的大肥鱼姐姐**：打包与 README、合成 fixture、跨平台核对、独立核验器。
 
-🔴 **将来要放的仓库名（建议，尚未上传、还没有公开地址）＝ `memory-receipts`**。
-⚠️ 注意：zip 里的目录名是 `memory-pack`，**与仓库名不必一致**；
-从仓库检出后，把本文档命令里出现的 `memory-pack` 换成你的检出目录名即可。
+**已发布**：<https://github.com/ANBYYYY/memory-receipts>（public；zip 里的目录名是 `memory-pack`，与仓库名不必一致）。
 
 ## 13 第三方归属
 

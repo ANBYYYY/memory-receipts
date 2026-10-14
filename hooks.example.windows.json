@@ -1,0 +1,71 @@
+{
+  "description": "Example only. Replace <PYTHON>, <PACKAGE_DIR> and <PROJECT_ROOT>. Registered sessions only; advisory content, and exact host hook trust plus lifecycle proof still have to be verified by you.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" -X utf8 \"<PACKAGE_DIR>/memory.py\" --root \"<PROJECT_ROOT>\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+# runtime state -- live files, never ship them (they may contain machine paths / session ids)
+runtime/
+outputs/
+
+# demo scratch, for the case where someone points --root inside the package
+demo/
+demo-state/
+pending.json
+resume.json
+
+# python bytecode
+__pycache__/
+*.py[cod]
+.pytest_cache/

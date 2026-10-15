@@ -24,12 +24,76 @@
 > **macOS / Linux 尚未实测**（写这版时手上没有那两台机）。代码里唯一的平台分支是文件锁
 > （`msvcrt` / `fcntl`），静态审查见 §11 —— **静态审查不等于跑过**。
 
+> ✅ **2026-10-16 增补（外部实测，非自报）**：**宿主钩子的触发面已实测成立** —— 在另一个宿主上，`SessionStart` 与 `UserPromptSubmit` **真的被叫醒并跑完**
+> （`hook/invoked` ＋ `hook/result`，钩子进程退出码 0），而且送进钩子进程的 payload 键**正好是 `hook()` 要读的那三个**（`transcript_path` 恒为空串）。
+> 🔴 **射程**：这只证明"**宿主会叫醒钩子**"，**不等于**"自动恢复被证明"（§9 第 1 条仍然成立），**也不等于**"本包已能接上那个宿主的会话"（登记 / 收件那一环要另做适配）。
+>
+> 🔴 **同一轮的反面读数同样重要**：那台宿主的**默认档下钩子根本不执行**（被宿主自己的沙箱拒绝），**而且钩子失败时宿主照样放行**；
+> 本包自己的第二道开关（`automation.json` 里 `enabled:false`）也会让 `hook()` **回 `{}`、零落盘、rc=0**。
+> ⇒ 这两种"什么都没发生"与"真的做了事"**在外观上无法区分**（退出码、输出形状、目录状态可以完全一样）——
+> **唯一能分辨它们的量是落盘痕迹**。所以凡是要靠自动面的用法，**必须自带这份痕迹**（本包给的是 `runtime/hook-evidence/`）。
+
+---
+
+## 最快路径（只拿到一个链接的人看这一节）
+
+> 下面 **§0–§13 的编号保持不动** —— 正文互相引用它们，改号会让已有引用全错位。
+
+1. **把仓库下下来。**
+   直接下：<https://github.com/ANBYYYY/memory-receipts/archive/refs/heads/main.zip>
+   （或点页面右上绿色 `Code` → `Download ZIP`），解压到随便一个目录，例如 `D:\memory-pack\`。
+   ⚠️ 解压出来的目录名会带个 `-main` 后缀，无所谓。
+   ⚠️ **别指望 `git clone`** —— 我们在另一台干净的 Windows 上实测过：`git` / `node` / `npm` / `pnpm` **四个全都不在**。
+
+2. **确认手上有一个 Python ≥ 3.9。**
+   - Windows：`py -3 -V`　｜　macOS / Linux：`python3 -V`
+   - **报"命令不存在"，或者打印 `Python was not found; run without arguments to install from the Microsoft Store…`** ⇒
+     那**不是解释器**（是 Windows 商店的占位程序）⇒ 看下面「一个都没有怎么办」。
+
+3. **跑起来。**
+   - **Windows：双击 `START-HERE.cmd`。** 它自己找解释器，在一个**包外**的临时目录里跑完 §2 → §4（含 35 项测试），最后告诉你包有没有被动过。
+   - **macOS / Linux：本包目前没有一键启动器。** 我们手上没有那两台机器，**写一个没跑过的东西挂在文档上，不如不挂**。照 §0 的 macOS / Linux 表选解释器，然后按 §2 → §3 逐条敲（下面那个「一个都没有」只针对 Windows）。
+
+4. **看到这两行才算过。**
+   ```
+   [OK]   fixture/verify.py                          rc=0
+   [OK]   包目录 <N> 个文件，跑完与跑前逐字节全等        ← N = 你解开时看到的文件数
+   ```
+   🔴 **判据是第二行**，不是"没报错"：`START-HERE.cmd` 跑完会**重新读一遍包目录里每个文件的 sha256**，跟跑之前逐个比。
+   §3④ 那个 `VERIFY OK` 是附加提示，**不是**判据。
+
+**一个都没有怎么办（Windows 上最常见）**
+
+```
+winget install -e --id Python.Python.3.12
+```
+
+装完**把窗口关掉、重新开一个新窗口**（这个窗口的 PATH 不会变），再双击一次 `START-HERE.cmd`。
+没有 `winget` ⇒ 去 <https://www.python.org/downloads/windows/> 下 3.12，安装时**勾上 `Add python.exe to PATH`**。
+**已经有 Python、只是不在 PATH 上** ⇒ 直接告诉那个文件它在哪：
+
+```
+set MEMORY_PACK_PYTHON=D:\你的路径\python.exe
+START-HERE.cmd
+```
+
+`MEMORY_PACK_PYTHON` **只改查找顺序，不改任何判据**（指向商店占位或不存在的路径都会被拒）。
+
+**跑完你会看到**：你手上那份包**一个字节都没变** —— 状态全落在包**外面**的临时目录里（脚本会把路径打出来，可以整个删掉）。
+
+**卡住了怎么办**：把你敲的**命令 ＋ 退出码 ＋ 原始输出**贴回来就行，不用解释、不用总结、不用自己诊断。
+（三行反馈口见 [`给试用者.txt`](给试用者.txt)：① 用它干了什么活 ② 哪一步卡了 ③ 第二天还打开它了吗。）
+
 ---
 
 ## 0 先看你用哪个解释器
 
 本包只用标准库，**Python 3.9+** 即可（`Path.is_relative_to` 需要 3.9）。
 不需要安装、不需要 pip、不需要联网。
+
+> 🔴 **换宿主的人先看这一行**：本包的登记口钉死在 **Codex rollout** 形状上（`ADAPTER` 常量 ＋ `cli_version` 白名单），
+> **换宿主必须改那几个常量并重跑 `tools/code_sha256.py`**（改一个字节，钩子那条自动面就会自己停用 —— 这是设计不是故障）。
+> 明细在 §8 那张表的第一行；**那条要跑到 §8 才看得到，所以在这里提一行。**
 
 ### Windows
 
@@ -39,6 +103,10 @@
 | ✅ 也可以 | `python` | 本机 PATH 上的 `python` 实测 = **Python 3.10.9** |
 | ✅ 指定全路径 | 指向 `python.exe` 的**完整路径**（自己那台的，不要照抄） | 装了多个版本时最稳 |
 | ❌ **不要用** | `python3` | 本机 `python3` 是 **Microsoft Store 的占位程序**，实测打印 `Python was not found; run without arguments to install from the Microsoft Store…` —— **它根本不是解释器** |
+| ⚠️ **两个都没有** | 见上面「**最快路径**」→「一个都没有怎么办」 | 另一台干净的 Windows 实测：`py` 不存在、`python` 与 `python3` **两个都是商店占位**（`python -V` 什么都不打印、**退出码 9009**）⇒ **照着这张表走会以为是自己环境坏了**。这时用 `winget` 装一个，或用 `MEMORY_PACK_PYTHON` 指全路径 |
+
+⚠️ **怎么判"找到了真解释器"**（启动器用的就是这条，别用"命令存在"判）：**`-V` 的退出码为 0，且输出里出现 `Python <数字>`**。
+实测反例：商店占位是 **stdout 全空、rc=9009**；也不能按"路径里有没有 `WindowsApps`"判 —— **`winget` 自己就住在 `WindowsApps` 底下**。
 
 先自检一句：`py -3 -V`
 
@@ -291,7 +359,7 @@ python3 -B -X utf8 -c "import tempfile;print(tempfile.gettempdir())"
 | `pending` | 列出"已收到但还没写覆盖理由"的公开事件（含原文坐标） | 0（实测） | ✅ §3④ 走过 |
 | `export` | 打印当前状态 JSON（就是 head 指向的那一版） | 0（实测） | ✅ 实测 |
 | `view` | 打印**短视图**文本（给宿主注入用）：版本、恢复入口、收件计数、当前球 | 0（实测） | ✅ 实测 |
-| `hook` | 从 **stdin** 读宿主事件 JSON，按 session/cwd 白名单决定是否回 `additionalContext` | 0；未登记会话回 `{}`（也是 0）（均实测） | ⚠️ **用合成事件实测过**（已登记会话回 `hookSpecificOutput`、上下文 741 字符；未登记 session 回 `{}`）。**"宿主真的触发、模型真的采用"没验** —— 程序自己也只标到 `handler_ran_host_trigger_unverified` |
+| `hook` | 从 **stdin** 读宿主事件 JSON，按 session/cwd 白名单决定是否回 `additionalContext` | 0；未登记会话回 `{}`（也是 0）（均实测） | ⚠️ **用合成事件实测过**（已登记会话回 `hookSpecificOutput`、上下文 741 字符；未登记 session 回 `{}`）。**"宿主真的触发"已于 2026-10-16 在另一个宿主上实测成立（见开头增补）；"模型真的采用"仍未验** —— 程序自己也只标到 `handler_ran_host_trigger_unverified` |
 | `organize` | **内部工人**：把增量机械抽成 `unreviewed` 草稿放进复核队列。**绝不发布状态** | 0（`consumed_into_review_queue`；再跑一次 `no_increment`）（均实测） | ⚠️ 实测过；"草稿对不对"是**人的判断**，程序只保证"没发布、没模型调用（`model_calls: 0`）" |
 | `organization-status` | 看草稿队列状态（消费了几个事件、几个 job） | 0（实测） | ⚠️ 同上（内部件） |
 
@@ -353,6 +421,9 @@ python3 -B -X utf8 hook_entry.py --root ../demo-state --code-sha256 <上一步�
 | `fixture/make_fixture.py` | 造合成 fixture |
 | `fixture/verify.py` | 独立核验器（A/B/C/D 四条） |
 | `tools/code_sha256.py` | 打印 `hook_entry.py` 要的代码摘要 |
+| `START-HERE.cmd` | **Windows 一键冷路径**（纯 ASCII 薄壳：找解释器 → 转交 `tools/start_here.py`）—— 只拿到链接的人从这一件开始，见开头「最快路径」 |
+| `tools/start_here.py` | 冷路径的**唯一逻辑**：跑 §2 → §4，末尾**重新读包目录每个文件的 sha256 与跑前逐个比** |
+| `tools/no_python.ps1` | 「一个解释器都没有」那屏的**中文增强块**（UTF-8 带 BOM；它失败**不影响**上面那屏 ASCII —— 那屏必须自足） |
 | `LICENSE` | MIT（署名见 §12） |
 | `给试用者.txt` / `给Mac试用者-自测清单.txt` | 给人看的一页说明 |
 

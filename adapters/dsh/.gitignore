@@ -1,0 +1,8 @@
+# 派生日志与状态目录含【真实会话正文】，绝不入库
+*.jsonl
+*.jsonl.state.json
+*.zstd
+run/
+state/
+__pycache__/
+*.pyc
